@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "messaging.broadcastTopic",
+      "type": "java.lang.String",
+      "description": "Description for messaging.broadcastTopic."
+    }
+  ]
+}
