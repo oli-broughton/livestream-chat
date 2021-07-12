@@ -12,7 +12,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 @SpringBootTest
-class MessageControllerITest {
+class MessagingControllerITest {
 
     private static RSocketRequester requester;
 
