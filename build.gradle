@@ -8,7 +8,6 @@ apply plugin: "io.spring.dependency-management"
 
 group = 'io.disposechat'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = "16"
 
 repositories {
     mavenCentral()
@@ -28,4 +27,13 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+bootBuildImage {
+    imageName = "disposechat/messaging:latest"
+    docker {
+        host = "tcp://192.168.49.2:2376"
+        tlsVerify = true
+        certPath = "/home/oliver/.minikube/certs"
+    }
 }
