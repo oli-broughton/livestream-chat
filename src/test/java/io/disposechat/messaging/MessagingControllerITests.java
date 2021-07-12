@@ -12,7 +12,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 @SpringBootTest
-class MessagingControllerITest {
+class MessagingControllerITests {
 
     private static RSocketRequester requester;
 
@@ -35,7 +35,6 @@ class MessagingControllerITest {
         var sendRoute = "send";
         var receiveRoute = "receive";
         var message = new Message("test", "test", "test");
-
 
         var messages = requester.route(receiveRoute)
                 .retrieveFlux(Message.class);
