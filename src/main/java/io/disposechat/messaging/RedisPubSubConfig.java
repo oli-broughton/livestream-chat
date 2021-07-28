@@ -12,7 +12,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-public class ReactiveRedisConfig {
+public class RedisPubSubConfig {
 
     @Bean
     ChannelTopic topic() {
@@ -30,6 +30,7 @@ public class ReactiveRedisConfig {
 
         RedisSerializationContext<String, Message> context =
                 builder.value(valueSerializer).build();
+
 
         return new ReactiveRedisTemplate<>(factory, context);
     }
