@@ -2,6 +2,7 @@ package io.disposechat.messaging;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.messaging.rsocket.annotation.ConnectMapping;
 import org.springframework.stereotype.Controller;
@@ -21,14 +22,17 @@ public class MessagingController {
 
     @ConnectMapping
     void onConnect(RSocketRequester requester) {
-        Objects.requireNonNull(requester.rsocket()).onClose()
-                .subscribe((close) -> log.info("disconnected" + requester.rsocketClient()));
+        Objects.requireNonNull(requester.rsocket())
+                .onClose()
+                .doOnError(error -> log.warn(requester.rsocketClient() + " Closed"))
+                .doFinally(consumer -> log.info(requester.rsocketClient() + " Disconnected"))
+                .subscribe();
 
-        log.info("connected" + requester.rsocketClient());
+        log.info(requester.rsocketClient() + " Connected");
     }
 
     @MessageMapping("send")
-    void send(RSocketRequester requester,  Message message) {
+    void send(RSocketRequester requester, @Payload Message message) {
         messagingService.send(message);
         log.info(requester.rsocketClient() + " sent " + message);
     }
