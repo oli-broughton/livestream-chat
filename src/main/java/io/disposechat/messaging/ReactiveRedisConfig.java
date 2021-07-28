@@ -19,7 +19,6 @@ public class ReactiveRedisConfig {
         return new ChannelTopic("message:broadcast");
     }
 
-
     @Bean
     public ReactiveRedisTemplate<String, Message> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory) {
 
@@ -37,9 +36,7 @@ public class ReactiveRedisConfig {
 
     @Bean
     ReactiveRedisMessageListenerContainer container(ReactiveRedisConnectionFactory factory) {
-        ReactiveRedisMessageListenerContainer container = new ReactiveRedisMessageListenerContainer(factory);
-        container.receive(topic());
-        return container;
+        return new ReactiveRedisMessageListenerContainer(factory);
     }
 
     @Bean
