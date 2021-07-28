@@ -22,7 +22,7 @@ public class MessagingController {
 
     @ConnectMapping
     void onConnect(RSocketRequester requester) {
-        Objects.requireNonNull(requester.rsocket())
+        Objects.requireNonNull(requester.rsocket(), "rsocket  should not be null")
                 .onClose()
                 .doOnError(error -> log.warn(requester.rsocketClient() + " Closed"))
                 .doFinally(consumer -> log.info(requester.rsocketClient() + " Disconnected"))
