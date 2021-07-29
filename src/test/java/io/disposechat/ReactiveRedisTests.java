@@ -8,8 +8,6 @@ import org.springframework.data.redis.core.ReactiveRedisOperations;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.UUID;
-
 @SpringBootTest
 public class ReactiveRedisTests {
 
@@ -17,16 +15,16 @@ public class ReactiveRedisTests {
     ReactiveRedisOperations<String, User> userStore;
 
     @Test
-    void generateRandomKey(){
+    void generateRandomKey() {
         StepVerifier.create(userStore.randomKey()).consumeNextWith(System.out::println).verifyComplete();
     }
 
     @Test
-    void addUser(){
+    void addUser() {
+        var user = new User("1", "username");
+        var createUser = Mono.just(user)
+                .filterWhen(u -> userStore.opsForValue().setIfAbsent(u.getUsername(), u));
 
-        var createUser = Mono.just(new User(UUID.randomUUID().toString(), "dave"))
-                .flatMap(user -> userStore.opsForValue().setIfAbsent(user.getId(), user));
-
-        StepVerifier.create(createUser).expectNext(true).verifyComplete();
+        StepVerifier.create(createUser).expectNext(user).verifyComplete();
     }
 }
