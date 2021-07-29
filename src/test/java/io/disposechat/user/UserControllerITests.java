@@ -1,5 +1,6 @@
 package io.disposechat.user;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,14 +15,40 @@ public class UserControllerITests {
     @Test
     void addUser() {
 
+        var username = "username";
+
         client.post().uri(uriBuilder ->
-                        uriBuilder.path("/user")
-                                .queryParam("name", "Dave")
+                        uriBuilder.path("/api/user")
+                                .queryParam("name", username)
                                 .build())
                 .exchange()
                 .expectStatus()
                 .isOk()
-                .expectBody(User.class);
+                .expectBody(User.class).value(user -> Assertions.assertEquals(username, user.getUsername()));
 
+    }
+
+    @Test
+    void addUserNotAvailable() {
+
+        var username = "username";
+
+        client.post().uri(uriBuilder ->
+                        uriBuilder.path("/api/user")
+                                .queryParam("name", username)
+                                .build())
+                .exchange()
+                .expectStatus()
+                .isOk()
+                        .expectBody(User.class).value(user -> Assertions.assertEquals(username, user.getUsername()));
+
+        client.post().uri(uriBuilder ->
+                        uriBuilder.path("/api/user")
+                                .queryParam("name", username)
+                                .build())
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody().isEmpty();
     }
 }
