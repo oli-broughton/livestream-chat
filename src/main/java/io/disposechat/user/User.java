@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class User {
-    final String id;
-    final String name;
+    private final String id;
+    private final String username;
 }
