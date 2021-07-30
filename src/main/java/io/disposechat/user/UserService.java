@@ -12,7 +12,7 @@ public class UserService {
         this.repo = repo;
     }
 
-    Mono<User> add(String name) {
-    return repo.add(name);
+    Mono<User> add(User user) {
+        return repo.save(user);
     }
 }

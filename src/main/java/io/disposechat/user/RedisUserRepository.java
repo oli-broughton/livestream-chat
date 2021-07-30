@@ -5,8 +5,6 @@ import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
-
 @Repository
 public class RedisUserRepository implements UserRepository {
 
@@ -17,9 +15,9 @@ public class RedisUserRepository implements UserRepository {
     }
 
     @Override
-    public Mono<User> add(String username) {
-        return Mono.just(new User(UUID.randomUUID().toString(), username))
-                .filterWhen(user -> userStore.opsForValue().setIfAbsent(user.getUsername(), user))
+    public Mono<User> save(User user) {
+        return Mono.just(user)
+                .filterWhen(u -> userStore.opsForValue().setIfAbsent(u.getUsername(), u))
                 .switchIfEmpty(Mono.error(new UsernameAlreadyUsedException()));
     }
 

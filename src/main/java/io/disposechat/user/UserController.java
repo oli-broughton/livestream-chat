@@ -17,7 +17,8 @@ public class UserController {
     }
 
     @PostMapping
-    Mono<User> user(@RequestParam String name) {
-        return userService.add(name);
+    Mono<User> user(@RequestBody User user) {
+        System.out.println(user);
+        return userService.add(user);
     }
 }

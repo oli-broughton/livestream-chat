@@ -29,54 +29,39 @@ class RedisUserRepositoryTest {
 
     @Test
     void addUsernameAvailable() {
-        var username = "username";
+        var newUser = new User("username");
 
         when(userStoreOperations
                 .opsForValue()
-                .setIfAbsent(eq(username), any(User.class)))
+                .setIfAbsent(eq(newUser.getUsername()), any(User.class)))
                 .thenReturn(Mono.just(true));
 
 
         StepVerifier
-                .create(userRepository.add(username))
-                .consumeNextWith(user ->
-                        Assertions.assertEquals(username, user.getUsername()))
+                .create(userRepository.save(newUser))
+                .consumeNextWith(savedUser ->
+                        Assertions.assertEquals(savedUser, newUser))
                 .verifyComplete();
     }
 
     @Test
     void addUsernameUnavailable() {
-        var username = "username";
+        var newUser = new User("username");
 
         when(userStoreOperations
                 .opsForValue()
-                .setIfAbsent(eq(username), any(User.class)))
-                .thenReturn(Mono.just(false));
-
-        StepVerifier
-                .create(userRepository.add(username))
-                .verifyComplete();
-    }
-
-    @Test
-    void addIdNotEmpty() {
-        when(userStoreOperations
-                .opsForValue()
-                .setIfAbsent(anyString(), any(User.class)))
+                .setIfAbsent(eq(newUser.getUsername()), any(User.class)))
                 .thenReturn(Mono.just(true));
 
-        StepVerifier
-                .create(userRepository.add("username"))
-                .consumeNextWith(user ->
-                        Assertions.assertFalse(user.getId().isEmpty()))
-                .verifyComplete();
 
+        StepVerifier
+                .create(userRepository.save(newUser))
+                .verifyComplete();
     }
 
-
     @Test
-    void findByIdFound() {
-        var user = new User("id", "username");
+    void findByUserFound() {
+        var user = new User( "username");
 
         when(userStoreOperations.opsForValue().get(user.getUsername())).thenReturn(Mono.just(user));
 
@@ -89,12 +74,12 @@ class RedisUserRepositoryTest {
 
     @Test
     void findByIdNotFound() {
-        var user = new User("id", "username");
+        var user = new User("username");
 
-        when(userStoreOperations.opsForValue().get(user.getId())).thenReturn(Mono.empty());
+        when(userStoreOperations.opsForValue().get(user.getUsername())).thenReturn(Mono.empty());
 
         StepVerifier
-                .create(userRepository.findByUsername(user.getId()))
+                .create(userRepository.findByUsername(user.getUsername()))
                 .verifyComplete();
 
     }

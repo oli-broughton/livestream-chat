@@ -21,7 +21,7 @@ public class ReactiveRedisTests {
 
     @Test
     void addUser() {
-        var user = new User("1", "username");
+        var user = new User("username");
         var createUser = Mono.just(user)
                 .filterWhen(u -> userStore.opsForValue().setIfAbsent(u.getUsername(), u));
 
