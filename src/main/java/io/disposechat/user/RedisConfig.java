@@ -12,7 +12,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 @EnableRedisRepositories
-public class RedisUserStoreConfig {
+public class RedisConfig {
 
     @Bean
     ReactiveRedisOperations<String, User> userStoreRedisOperation(ReactiveRedisConnectionFactory factory) {
