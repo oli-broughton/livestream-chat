@@ -1,11 +1,22 @@
 package io.disposechat.user;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
-@AllArgsConstructor
+import java.util.UUID;
+
+@Getter
+@Setter
 public class User {
-    private final String id;
-    private final String username;
+    private UUID uuid;
+    private String username;
+
+    public User() {
+        this.uuid = UUID.randomUUID();
+    }
+
+    public User(String username) {
+        this();
+        this.username = username;
+    }
 }
