@@ -18,7 +18,7 @@ public class RedisUserRepository implements UserRepository {
     public Mono<User> save(User user) {
         return Mono.just(user)
                 .filterWhen(u -> userStore.opsForValue().setIfAbsent(u.getUsername(), u))
-                .switchIfEmpty(Mono.error(new UsernameAlreadyUsedException()));
+                .switchIfEmpty(Mono.error(new UsernameAlreadyFoundException()));
     }
 
     @Override
