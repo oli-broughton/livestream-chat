@@ -24,7 +24,10 @@ import static org.mockito.ArgumentMatchers.eq;
 public class UserRouteTests {
 
     @MockBean(answer = Answers.RETURNS_DEEP_STUBS)
-    private UserService service;
+    private UserService userService;
+
+    @MockBean(answer = Answers.RETURNS_DEEP_STUBS)
+    private ChatTokenService chatTokenService;
 
     @Autowired
     UserRouter userRouter;
@@ -40,15 +43,18 @@ public class UserRouteTests {
     void addUser() {
 
         var user = new User("username");
+        var validMessagingToken = "FakeTokenString";
 
-        Mockito.when(service.add(eq(user))).thenReturn(Mono.just(user));
+        Mockito.when(userService.save(eq(user))).thenReturn(Mono.just(user));
+        Mockito.when(chatTokenService.encodeToken(eq(user))).thenReturn(validMessagingToken);
+
 
         client.post().uri("/api/user")
                 .bodyValue(user)
                 .exchange()
                 .expectStatus()
                 .isOk()
-                .expectBody(User.class).value(addedUser -> Assertions.assertEquals(user.getUsername(), addedUser.getUsername()));
+                .expectBody(String.class).value(token -> Assertions.assertEquals(validMessagingToken, token));
 
     }
 
@@ -56,7 +62,7 @@ public class UserRouteTests {
     void addUserNotAvailable() {
         var user = new User("username");
 
-        Mockito.when(service.add(eq(user))).thenReturn(Mono.error(new UsernameAlreadyFoundException()));
+        Mockito.when(userService.save(eq(user))).thenReturn(Mono.error(new UsernameAlreadyFoundException()));
 
         client.post().uri("/api/user")
                 .bodyValue(user)
@@ -64,4 +70,5 @@ public class UserRouteTests {
                 .expectStatus()
                 .isEqualTo(HttpStatus.CONFLICT);
     }
+
 }
