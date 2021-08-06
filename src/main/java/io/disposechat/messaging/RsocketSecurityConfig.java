@@ -5,14 +5,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.rsocket.RSocketStrategies;
 import org.springframework.messaging.rsocket.annotation.support.RSocketMessageHandler;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.rsocket.EnableRSocketSecurity;
 import org.springframework.security.config.annotation.rsocket.RSocketSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.messaging.handler.invocation.reactive.AuthenticationPrincipalArgumentResolver;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager;
@@ -29,54 +33,40 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableReactiveMethodSecurity
 public class RsocketSecurityConfig {
 
-  @Value("${jwt.key}")
-    String key;
+    @Value("${auth0.audience}")
+    String audience;
+
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    String issuer;
+
 
     @Bean
     public PayloadSocketAcceptorInterceptor rsocketInterceptor(RSocketSecurity rSocketSecurity) {
         return rSocketSecurity.authorizePayload(authorize ->
                         authorize.anyExchange().authenticated())
-                .jwt( jwtSpec -> {
-                    try {
-                        jwtSpec.authenticationManager(jwtReactiveAuthenticationManager(reactiveJwtDecoder()));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                })
+                .jwt(Customizer.withDefaults())
                 .build();
     }
 
     @Bean
-    public ReactiveJwtDecoder reactiveJwtDecoder() throws Exception {
-        Mac mac = Mac.getInstance("HmacSHA512");
-        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), mac.getAlgorithm());
+    public ReactiveJwtDecoder reactiveJwtDecoder() {
 
-        return NimbusReactiveJwtDecoder.withSecretKey(secretKey)
-                .macAlgorithm(MacAlgorithm.HS512)
-                .build();
-    }
+        var reactiveJwtDecoder = (NimbusReactiveJwtDecoder) ReactiveJwtDecoders.fromOidcIssuerLocation(issuer);
 
-    @Bean
-    public JwtReactiveAuthenticationManager jwtReactiveAuthenticationManager(ReactiveJwtDecoder reactiveJwtDecoder) {
-        JwtReactiveAuthenticationManager jwtReactiveAuthenticationManager = new JwtReactiveAuthenticationManager(reactiveJwtDecoder);
+        OAuth2TokenValidator<Jwt> audienceValidator = (jwt) -> {
+            OAuth2Error error = new OAuth2Error("invalid_token", "The required audience is missing", null);
+            if (jwt.getAudience().contains(audience)) {
+                return OAuth2TokenValidatorResult.success();
+            }
+            return OAuth2TokenValidatorResult.failure(error);
+        };
 
-        JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
-        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLES_");
-        authenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-        jwtReactiveAuthenticationManager.setJwtAuthenticationConverter( new ReactiveJwtAuthenticationConverterAdapter(authenticationConverter));
-        return jwtReactiveAuthenticationManager;
-    }
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
+        OAuth2TokenValidator<Jwt> compositeValidator = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
 
-    @Bean
-    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-        http
-                .authorizeExchange(exchanges ->
-                        exchanges
-                                .anyExchange().permitAll()
-                ).csrf().disable();
+        reactiveJwtDecoder.setJwtValidator(compositeValidator);
 
-        return http.build();
+        return reactiveJwtDecoder;
     }
 
     @Bean
