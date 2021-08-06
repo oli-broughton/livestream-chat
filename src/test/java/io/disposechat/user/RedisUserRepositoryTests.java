@@ -15,7 +15,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class RedisUserRepositoryTest {
+class RedisUserRepositoryTests {
 
     @Mock(answer = RETURNS_DEEP_STUBS)
     ReactiveRedisOperations<String, User> userStoreOperations;
@@ -51,12 +51,13 @@ class RedisUserRepositoryTest {
         when(userStoreOperations
                 .opsForValue()
                 .setIfAbsent(eq(newUser.getUsername()), any(User.class)))
-                .thenReturn(Mono.just(true));
+                .thenReturn(Mono.just(false));
 
 
         StepVerifier
                 .create(userRepository.save(newUser))
-                .verifyComplete();
+                .expectError(UsernameAlreadyFoundException.class)
+                .verify();
     }
 
     @Test
