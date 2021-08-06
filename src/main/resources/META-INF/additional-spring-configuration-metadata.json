@@ -4,6 +4,11 @@
       "name": "messaging.broadcastTopic",
       "type": "java.lang.String",
       "description": "Description for messaging.broadcastTopic."
+    },
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "Description for jwt.secret."
     }
   ]
 }
