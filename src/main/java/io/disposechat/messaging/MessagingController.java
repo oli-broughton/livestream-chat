@@ -16,6 +16,9 @@ import java.util.Objects;
 @Slf4j
 public class MessagingController {
 
+    @Value("${auth0.audience}")
+    String audience;
+
     private final MessagingService messagingService;
 
     public MessagingController(MessagingService messagingService) {
@@ -34,10 +37,9 @@ public class MessagingController {
 
     @SneakyThrows
     @MessageMapping("send")
-    void send(RSocketRequester requester, Message message, @AuthenticationPrincipal Jwt token) {
-        log.info(token.getSubject());
-        messagingService.send(message);
-        log.info(requester.rsocketClient() + " sent " + message);
+    void send(String message, @AuthenticationPrincipal Jwt token) {
+        var username = token.getClaimAsString(audience + "/username");
+        messagingService.send(new Message(username, message));
     }
 
     @MessageMapping("receive")
