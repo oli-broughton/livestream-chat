@@ -24,14 +24,12 @@ public class MessagingController {
 
     @ConnectMapping
     void onConnect(RSocketRequester requester, @AuthenticationPrincipal Jwt token) {
-        log.info(token.getSubject());
         Objects.requireNonNull(requester.rsocket(), "rsocket  should not be null")
                 .onClose()
                 .doOnError(error -> log.warn(requester.rsocketClient() + " Closed"))
                 .doFinally(consumer -> log.info(requester.rsocketClient() + " Disconnected"))
                 .subscribe();
 
-        log.info(requester.rsocketClient() + " Connected");
     }
 
     @SneakyThrows
