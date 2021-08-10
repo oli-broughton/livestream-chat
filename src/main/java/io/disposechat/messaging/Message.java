@@ -10,7 +10,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Message implements Serializable {
-    String group;
-    String name;
+    String username;
     String message;
 }
