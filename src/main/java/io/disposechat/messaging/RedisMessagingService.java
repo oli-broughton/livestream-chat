@@ -8,6 +8,7 @@ import org.springframework.data.redis.listener.ReactiveRedisMessageListenerConta
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 
@@ -31,8 +32,9 @@ public class RedisMessagingService implements MessagingService {
     }
 
     @Override
-    public void send(Message message) {
-        this.reactiveTemplate.convertAndSend(channelTopic.getTopic(), message).subscribe();
+    public Mono<Boolean> send(Message message) {
+        return this.reactiveTemplate.convertAndSend(channelTopic.getTopic(), message)
+                .then(Mono.just(true));
     }
 
     @Override

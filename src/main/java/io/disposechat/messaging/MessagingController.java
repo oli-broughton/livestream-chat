@@ -10,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
@@ -33,14 +34,12 @@ public class MessagingController {
                 .doOnError(error -> log.warn(requester.rsocketClient() + " Closed"))
                 .doFinally(consumer -> log.info(requester.rsocketClient() + " Disconnected"))
                 .subscribe();
-
     }
 
-    @SneakyThrows
     @MessageMapping("send")
-    void send(String message, @AuthenticationPrincipal Jwt token) {
-        var username = token.getClaimAsString(audience + "/username");
-        messagingService.send(new Message(username, message));
+    Mono<Boolean> send(String message, @AuthenticationPrincipal Mono<Jwt> token) {
+        return token.map(jwt -> jwt.getClaimAsString(audience + "/username"))
+                .flatMap(username -> messagingService.send(new Message(username, message)));
     }
 
     @MessageMapping("receive")
