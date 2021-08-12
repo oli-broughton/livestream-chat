@@ -20,12 +20,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis:2.5.3'
     implementation 'org.springframework.security:spring-security-rsocket:5.5.1'
     implementation 'org.springframework.security:spring-security-messaging:5.5.1'
-    implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.jetbrains:annotations:21.0.1'
     implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
     compileOnly 'org.springframework.boot:spring-boot-configuration-processor:2.5.3'
     compileOnly 'org.projectlombok:lombok:1.18.20'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'
+    testImplementation ('it.ozimov:embedded-redis:0.7.3'){
+        exclude group: 'org.slf4j'
+    }
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.5.3'
     testImplementation 'io.projectreactor:reactor-test:3.4.8'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.2'
