@@ -9,24 +9,14 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.rsocket.EnableRSocketSecurity;
 import org.springframework.security.config.annotation.rsocket.RSocketSecurity;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.messaging.handler.invocation.reactive.AuthenticationPrincipalArgumentResolver;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager;
-import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
 import org.springframework.security.rsocket.core.PayloadSocketAcceptorInterceptor;
-import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.util.pattern.PathPatternRouteMatcher;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 @Configuration
 @EnableRSocketSecurity
@@ -43,7 +33,9 @@ public class RsocketSecurityConfig {
     @Bean
     public PayloadSocketAcceptorInterceptor rsocketInterceptor(RSocketSecurity rSocketSecurity) {
         return rSocketSecurity.authorizePayload(authorize ->
-                        authorize.anyExchange().authenticated())
+                        authorize.route("send").authenticated()
+                                .anyExchange().permitAll()
+                )
                 .jwt(Customizer.withDefaults())
                 .build();
     }
