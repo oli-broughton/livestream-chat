@@ -1,13 +1,10 @@
 package io.disposechat.messaging;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONString;
+import io.rsocket.exceptions.ApplicationErrorException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.aop.framework.AopInfrastructureBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,24 +12,18 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.security.rsocket.metadata.BearerTokenMetadata;
-import org.springframework.util.MimeType;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
-import java.awt.print.Book;
 import java.net.URI;
-import java.net.http.HttpHeaders;
 import java.util.Map;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SpringBootTest(classes = TestRedisConfiguration.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class MessagingControllerITests {
 
     @Value("${auth0.audience}")
@@ -54,7 +45,6 @@ class MessagingControllerITests {
 
     private static RSocketRequester requester;
 
-
     @BeforeAll
     public void setupUp(@Autowired RSocketRequester.Builder builder) {
 
@@ -62,6 +52,77 @@ class MessagingControllerITests {
         Hooks.onErrorDropped((throwable) -> {
         });
         requester = builder.websocket(URI.create("ws://localhost:8080/rs"));
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        requester.dispose();
+    }
+
+    @Test
+    void sendMessage() {
+        var sendRoute = "send";
+        var testMessage = "test message";
+
+        // todo - maybe create user test class
+        var response = requestAccessToken()
+                .flatMap(token -> requester.
+                        route(sendRoute)
+                        .metadata(token, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
+                        .data(testMessage)
+                        .retrieveMono(Boolean.class));
+
+        StepVerifier.create(response).expectNext(true).verifyComplete();
+    }
+
+    @Test
+    void sendMessageExpiredToken() {
+        var sendRoute = "send";
+        var testMessage = "test message";
+
+
+        // todo - move to properties file
+        var invalidToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ill5MHEzWkg2cHV" +
+                "JUnRTNE1OOHFpNiJ9.eyJodHRwczovL2Rpc3RyaWJ1dGVkY2hhdC5pby9hcGkvdXNlcm5hbWU" +
+                "iOiJ0ZXN0dXNlcjEiLCJpc3MiOiJodHRwczovL2Rldi1wdHlldGU2Ny51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjExM2U1NGU" +
+                "yYjFjNWQwMDY5NDQ5ZTBkIiwiYXVkIjoiaHR0cHM6Ly9kaXN0cmlidXRlZGNoYXQuaW" +
+                "8vYXBpIiwiaWF0IjoxNjI4NzY3MzQ2LCJleHAiOjE2Mjg3Njc0MDYsImF6cCI6ImlqRWd6" +
+                "QUVTSUpIRWNPYUNhS2tnTk5EVjBMRXFDQk5VIiwic2NvcGUiOiJyZWFkOmN1cnJlbnRfdXNlciIsImd0eSI6InBhc3N3b3JkIn0" +
+                ".anq0HVVIkSOs0swGLHjC0kctSloXuresBxCOIrH761fN6QyqVoul" +
+                "0b23DWnD-uYyLWhqCJWv0mDs543JsMZ79uXSnw0Vv4IOvGIsCNlbey0dBbfxX64pqbbZsmvCfzPhSR_w2RYOnuXNrReIefTlPvx8iCUqJ2GhRYtOX" +
+                "-q28D68afuXbB4wmTX9UaVxacohZ00ZBmMLZnsf_BpUqbbA5IWZ1kkuH_f2I1L1EOS5JDk--4xz4Qr4Jh1BaIYVuwfOesPPgKpjoan2C8irA8vQBkVVYb2cY-" +
+                "ctfuJsuYNbbVcAl5SNf-HU01jCy7T2aCc7r_ypQuIsTsyqnP5REHaLOg";
+
+        // todo - maybe create user test class
+        var response = requester.
+                route(sendRoute)
+                .metadata(invalidToken, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
+                .data(testMessage)
+                .retrieveMono(Boolean.class);
+
+        StepVerifier.create(response).expectError(ApplicationErrorException.class).verify();
+    }
+
+    @Test
+    void receiveMessage() {
+        var sendRoute = "send";
+        var retrieveRoute = "receive";
+        var testMessage = "test message";
+
+        var receivedMessages = requester
+                .route(retrieveRoute)
+                .retrieveFlux(Message.class);
+
+        requestAccessToken()
+                .flatMap(token -> requester.
+                        route(sendRoute)
+                        .metadata(token, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
+                        .data(testMessage)
+                        .retrieveMono(Boolean.class))
+                .subscribeOn(Schedulers.single())
+                .subscribe();
+
+        StepVerifier.create(receivedMessages).expectNext(new Message(username, testMessage)).thenCancel().verify();
     }
 
     public Mono<String> requestAccessToken() {
@@ -83,54 +144,5 @@ class MessagingControllerITests {
                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {
                 })
                 .map(map -> map.get("access_token"));
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        requester.dispose();
-    }
-
-    @Test
-    void validToken() {
-
-    }
-
-    @Test
-    void sendMessage() {
-        var sendRoute = "send";
-        var testMessage = "test message";
-
-        // todo - maybe create user test class
-        var response  = requestAccessToken()
-                .flatMap(token -> requester.
-                        route(sendRoute)
-                        .metadata(token, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
-                        .data(testMessage)
-                        .retrieveMono(Boolean.class));
-
-        StepVerifier.create(response).expectNext(true).verifyComplete();
-
-    }
-
-    @Test
-    void receiveMessage(){
-        var sendRoute = "send";
-        var retrieveRoute = "receive";
-        var testMessage = "test message";
-
-        var receivedMessages = requester
-                .route(retrieveRoute)
-                .retrieveFlux(Message.class);
-
-        requestAccessToken()
-                .flatMap(token -> requester.
-                        route(sendRoute)
-                        .metadata(token, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
-                        .data(testMessage)
-                        .retrieveMono(Boolean.class))
-                .subscribeOn(Schedulers.single())
-                .subscribe();
-
-        StepVerifier.create(receivedMessages).expectNext(new Message(username, testMessage)).thenCancel().verify();
     }
 }
