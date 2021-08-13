@@ -1,4 +1,4 @@
-package io.disposechat.messaging;
+package com.distributedchat.pubsub.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -29,11 +29,10 @@ public class RsocketSecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     String issuer;
 
-
     @Bean
     public PayloadSocketAcceptorInterceptor rsocketInterceptor(RSocketSecurity rSocketSecurity) {
         return rSocketSecurity.authorizePayload(authorize ->
-                        authorize.route("send").authenticated()
+                        authorize.route("publish").authenticated()
                                 .anyExchange().permitAll()
                 )
                 .jwt(Customizer.withDefaults())

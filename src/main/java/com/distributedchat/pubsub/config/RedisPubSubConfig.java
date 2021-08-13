@@ -1,5 +1,6 @@
-package io.disposechat.messaging;
+package com.distributedchat.pubsub.config;
 
+import com.distributedchat.pubsub.Message;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
@@ -14,6 +15,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisPubSubConfig {
 
+    // todo - set from properties
     @Bean
     ChannelTopic topic() {
         return new ChannelTopic("message:broadcast");

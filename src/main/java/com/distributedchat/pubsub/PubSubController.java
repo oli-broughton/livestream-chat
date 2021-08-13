@@ -1,8 +1,7 @@
-package io.disposechat.messaging;
+package com.distributedchat.pubsub;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.messaging.rsocket.annotation.ConnectMapping;
@@ -16,19 +15,19 @@ import java.util.Objects;
 
 @Controller
 @Slf4j
-public class MessagingController {
+public class PubSubController {
 
     @Value("${auth0.audience}")
     String audience;
 
-    private final MessagingService messagingService;
+    private final PubSubService messagingService;
 
-    public MessagingController(MessagingService messagingService) {
+    public PubSubController(PubSubService messagingService) {
         this.messagingService = messagingService;
     }
 
     @ConnectMapping
-    void onConnect(RSocketRequester requester, @AuthenticationPrincipal Jwt token) {
+    void onConnect(RSocketRequester requester) {
         Objects.requireNonNull(requester.rsocket(), "rsocket  should not be null")
                 .onClose()
                 .doOnError(error -> log.warn(requester.rsocketClient() + " Closed"))
@@ -36,14 +35,14 @@ public class MessagingController {
                 .subscribe();
     }
 
-    @MessageMapping("send")
-    Mono<Void> send(String message, @AuthenticationPrincipal Mono<Jwt> token) {
+    @MessageMapping("publish")
+    Mono<Void> publish(String message, @AuthenticationPrincipal Mono<Jwt> token) {
         return token.map(jwt -> jwt.getClaimAsString(audience + "/username"))
-                .flatMap(username -> messagingService.send(new Message(username, message)));
+                .flatMap(username -> messagingService.publish(new Message(username, message)));
     }
 
-    @MessageMapping("receive")
-    Flux<Message> receive() {
-        return messagingService.receive();
+    @MessageMapping("subscribe")
+    Flux<Message> subscribe() {
+        return messagingService.subscribe();
     }
 }
