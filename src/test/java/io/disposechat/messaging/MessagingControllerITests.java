@@ -60,19 +60,19 @@ class MessagingControllerITests {
     }
 
     @Test
-    void sendMessage() {
-        var sendRoute = "send";
-        var testMessage = "test message";
+    void sendMessage(){
+            var sendRoute = "send";
+            var testMessage = "test message";
 
-        // todo - maybe create user test class
-        var response = requestAccessToken()
-                .flatMap(token -> requester.
-                        route(sendRoute)
-                        .metadata(token, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
-                        .data(testMessage)
-                        .retrieveMono(Boolean.class));
+           var request =  requestAccessToken()
+                    .flatMap(token -> requester.
+                            route(sendRoute)
+                            .metadata(token, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
+                            .data(testMessage)
+                            .retrieveMono(Void.class));
 
-        StepVerifier.create(response).expectNext(true).verifyComplete();
+
+            StepVerifier.create(request).verifyComplete();
     }
 
     @Test
@@ -98,7 +98,7 @@ class MessagingControllerITests {
                 route(sendRoute)
                 .metadata(invalidToken, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
                 .data(testMessage)
-                .retrieveMono(Boolean.class);
+                .retrieveMono(Void.class);
 
         StepVerifier.create(response).expectError(ApplicationErrorException.class).verify();
     }

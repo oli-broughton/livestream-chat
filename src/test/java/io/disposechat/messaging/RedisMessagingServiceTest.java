@@ -8,7 +8,6 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.connection.ReactiveSubscription;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -22,29 +21,26 @@ import reactor.test.StepVerifier;
 class RedisMessagingServiceTest {
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-    ReactiveRedisTemplate<String, Message> reactiveRedisTemplate;
+    private ReactiveRedisTemplate<String, Message> reactiveRedisTemplate;
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-    ReactiveRedisMessageListenerContainer reactiveRedisMessageListenerContainer;
+    private ReactiveRedisMessageListenerContainer reactiveRedisMessageListenerContainer;
 
     @Mock
-    RedisSerializationContext.SerializationPair<String> stringSerializationPair;
+    private RedisSerializationContext.SerializationPair<String> stringSerializationPair;
 
     @Mock
-    RedisSerializationContext.SerializationPair<Message> messageSerializationPair;
+    private RedisSerializationContext.SerializationPair<Message> messageSerializationPair;
 
-    MessagingService messagingService;
+    private MessagingService messagingService;
 
     @BeforeEach
     void setup(){
-        Mockito.when(reactiveRedisTemplate.getSerializationContext().getKeySerializationPair()).thenReturn(stringSerializationPair);
-        Mockito.when(reactiveRedisTemplate.getSerializationContext().getValueSerializationPair()).thenReturn(messageSerializationPair);
-
         messagingService = new RedisMessagingService(reactiveRedisTemplate, reactiveRedisMessageListenerContainer);
     }
 
     @Test
-    void sendSuccessful() {
+    void send() {
         var sendChannel = "broadcast";
         var testMessage = new Message("testuser", "test message");
 
@@ -52,19 +48,21 @@ class RedisMessagingServiceTest {
                 ArgumentMatchers.eq(sendChannel),
                 ArgumentMatchers.eq(testMessage))).thenReturn(Mono.just(1L));
 
-        var response = messagingService.send(testMessage);
-
-        StepVerifier.create(response).expectNext(true).verifyComplete();
+        StepVerifier.create(messagingService.send(testMessage)).verifyComplete();
     }
 
     @Test
     void receive() {
+
+        Mockito.when(reactiveRedisTemplate.getSerializationContext().getKeySerializationPair()).thenReturn(stringSerializationPair);
+        Mockito.when(reactiveRedisTemplate.getSerializationContext().getValueSerializationPair()).thenReturn(messageSerializationPair);
+
         var testMessage = new Message("testuser", "test message");
 
         Mockito.when(reactiveRedisMessageListenerContainer.receive(
                 ArgumentMatchers.<Iterable<ChannelTopic>>any(),
-                ArgumentMatchers.< RedisSerializationContext.SerializationPair<String>>any(),
-                ArgumentMatchers.< RedisSerializationContext.SerializationPair<Message>>any())
+                ArgumentMatchers.eq(stringSerializationPair),
+                ArgumentMatchers.eq(messageSerializationPair))
         ).thenReturn(Flux.just(new ReactiveSubscription.ChannelMessage<>("broadcast", testMessage)));
 
         var messages = messagingService.receive();

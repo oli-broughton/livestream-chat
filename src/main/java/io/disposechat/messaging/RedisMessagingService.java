@@ -1,7 +1,5 @@
 package io.disposechat.messaging;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.ReactiveSubscription;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -22,27 +20,26 @@ public class RedisMessagingService implements MessagingService {
     private final ReactiveRedisTemplate<String, Message> reactiveTemplate;
     private final ReactiveRedisMessageListenerContainer reactiveMsgListenerContainer;
 
-    private final RedisSerializationContext.SerializationPair<String> redisKeyType;
-    private final RedisSerializationContext.SerializationPair<Message> redisValueType;
-
     public RedisMessagingService(ReactiveRedisTemplate<String, Message> reactiveTemplate,
                                  ReactiveRedisMessageListenerContainer reactiveMsgListenerContainer) {
         this.reactiveMsgListenerContainer = reactiveMsgListenerContainer;
         this.reactiveTemplate = reactiveTemplate;
-        this.redisKeyType = reactiveTemplate.getSerializationContext().getKeySerializationPair();
-        this.redisValueType = reactiveTemplate.getSerializationContext().getValueSerializationPair();
+
     }
 
     @Override
-    public Mono<Boolean> send(Message message) {
-        return this.reactiveTemplate.convertAndSend(channelTopic.getTopic(), message)
-                .then(Mono.just(true));
+    public Mono<Void> send(Message message) {
+        return this.reactiveTemplate
+                .convertAndSend(channelTopic.getTopic(), message)
+                .then(Mono.empty());
     }
 
     @Override
     public Flux<Message> receive() {
         return reactiveMsgListenerContainer
-                .receive(Collections.singletonList(channelTopic), redisKeyType, redisValueType)
+                .receive(Collections.singletonList(channelTopic),
+                        reactiveTemplate.getSerializationContext().getKeySerializationPair(),
+                        reactiveTemplate.getSerializationContext().getValueSerializationPair())
                 .map(ReactiveSubscription.Message::getMessage);
     }
 }

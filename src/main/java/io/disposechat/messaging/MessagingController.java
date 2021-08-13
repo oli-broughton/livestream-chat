@@ -1,8 +1,8 @@
 package io.disposechat.messaging;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.messaging.rsocket.annotation.ConnectMapping;
@@ -37,7 +37,7 @@ public class MessagingController {
     }
 
     @MessageMapping("send")
-    Mono<Boolean> send(String message, @AuthenticationPrincipal Mono<Jwt> token) {
+    Mono<Void> send(String message, @AuthenticationPrincipal Mono<Jwt> token) {
         return token.map(jwt -> jwt.getClaimAsString(audience + "/username"))
                 .flatMap(username -> messagingService.send(new Message(username, message)));
     }
