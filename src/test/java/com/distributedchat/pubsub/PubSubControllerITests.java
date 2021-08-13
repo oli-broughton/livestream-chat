@@ -1,4 +1,4 @@
-package io.disposechat.messaging;
+package com.distributedchat.pubsub;
 
 import io.rsocket.exceptions.ApplicationErrorException;
 import org.junit.jupiter.api.*;
@@ -9,7 +9,6 @@ import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.security.rsocket.metadata.BearerTokenMetadata;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.core.publisher.Hooks;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.net.URI;
@@ -19,7 +18,7 @@ import java.time.Duration;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @EnableConfigurationProperties(value = Auth0TestClient.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class MessagingControllerITests {
+class PubSubControllerITests {
     @Autowired
     Auth0TestClient auth0TestClient;
 
@@ -49,12 +48,12 @@ class MessagingControllerITests {
 
     @Test
     void sendMessage() {
-        var sendRoute = "send";
+        var publishRoute = "publish";
         var testMessage = "test message";
 
         var request = auth0TestClient.requestValidAccessToken()
                 .flatMap(token -> requester.
-                        route(sendRoute)
+                        route(publishRoute)
                         .metadata(token, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
                         .data(testMessage)
                         .retrieveMono(Void.class));
@@ -64,12 +63,12 @@ class MessagingControllerITests {
 
     @Test
     void sendMessageExpiredToken() {
-        var sendRoute = "send";
+        var publishRoute = "publish";
         var testMessage = "test message";
 
         var response = auth0TestClient.requestExpiredAccessToken()
                 .flatMap(token -> requester.
-                        route(sendRoute)
+                        route(publishRoute)
                         .metadata(token, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
                         .data(testMessage)
                         .retrieveMono(Void.class));
@@ -81,18 +80,18 @@ class MessagingControllerITests {
 
     @Test
     void receiveMessage() {
-        var sendRoute = "send";
-        var retrieveRoute = "receive";
+        var publishRoute = "publish";
+        var subscribeRoute = "subscribe";
         var testMessage = "test message";
 
         var receivedMessages = requester
-                .route(retrieveRoute)
+                .route(subscribeRoute)
                 .retrieveFlux(Message.class)
                 .cache();
 
         auth0TestClient.requestValidAccessToken()
                 .flatMap(token -> requester.
-                        route(sendRoute)
+                        route(publishRoute)
                         .metadata(token, BearerTokenMetadata.BEARER_AUTHENTICATION_MIME_TYPE)
                         .data(testMessage)
                         .retrieveMono(Void.class))

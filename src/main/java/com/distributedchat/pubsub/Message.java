@@ -1,4 +1,4 @@
-package io.disposechat.messaging;
+package com.distributedchat.pubsub;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package io.disposechat.messaging;
+package com.distributedchat.pubsub;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
-class RedisMessagingServiceTest {
+class RedisPubSubServiceTest {
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private ReactiveRedisTemplate<String, Message> reactiveRedisTemplate;
@@ -32,11 +32,11 @@ class RedisMessagingServiceTest {
     @Mock
     private RedisSerializationContext.SerializationPair<Message> messageSerializationPair;
 
-    private MessagingService messagingService;
+    private PubSubService messagingService;
 
     @BeforeEach
     void setup(){
-        messagingService = new RedisMessagingService(reactiveRedisTemplate, reactiveRedisMessageListenerContainer);
+        messagingService = new RedisPubSubService(reactiveRedisTemplate, reactiveRedisMessageListenerContainer);
     }
 
     @Test
@@ -48,7 +48,7 @@ class RedisMessagingServiceTest {
                 ArgumentMatchers.eq(sendChannel),
                 ArgumentMatchers.eq(testMessage))).thenReturn(Mono.just(1L));
 
-        StepVerifier.create(messagingService.send(testMessage)).verifyComplete();
+        StepVerifier.create(messagingService.publish(testMessage)).verifyComplete();
     }
 
     @Test
@@ -65,7 +65,7 @@ class RedisMessagingServiceTest {
                 ArgumentMatchers.eq(messageSerializationPair))
         ).thenReturn(Flux.just(new ReactiveSubscription.ChannelMessage<>("broadcast", testMessage)));
 
-        var messages = messagingService.receive();
+        var messages = messagingService.subscribe();
 
         StepVerifier.create(messages).expectNext(testMessage).thenCancel().verify();
     }
