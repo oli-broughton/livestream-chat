@@ -21,7 +21,7 @@ import org.springframework.web.util.pattern.PathPatternRouteMatcher;
 @Configuration
 @EnableRSocketSecurity
 @EnableReactiveMethodSecurity
-public class RsocketSecurityConfig {
+public class RSocketSecurityConfig {
 
     @Value("${auth0.audience}")
     String audience;
@@ -45,6 +45,7 @@ public class RsocketSecurityConfig {
         var reactiveJwtDecoder = (NimbusReactiveJwtDecoder) ReactiveJwtDecoders.fromOidcIssuerLocation(issuer);
 
         OAuth2TokenValidator<Jwt> audienceValidator = (jwt) -> {
+
             OAuth2Error error = new OAuth2Error("invalid_token", "The required audience is missing", null);
             if (jwt.getAudience().contains(audience)) {
                 return OAuth2TokenValidatorResult.success();
@@ -62,16 +63,11 @@ public class RsocketSecurityConfig {
 
     @Bean
     RSocketMessageHandler messageHandler(RSocketStrategies strategies) {
-        return getMessageHandler(strategies);
-    }
-
-    protected RSocketMessageHandler getMessageHandler(RSocketStrategies strategies) {
         RSocketMessageHandler mh = new RSocketMessageHandler();
         mh.getArgumentResolverConfigurer().addCustomResolver(
                 new AuthenticationPrincipalArgumentResolver());
         mh.setRouteMatcher(new PathPatternRouteMatcher());
         mh.setRSocketStrategies(strategies);
-
         return mh;
     }
 }
