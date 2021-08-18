@@ -17,8 +17,8 @@ import java.util.Objects;
 @Slf4j
 public class PubSubController {
 
-    @Value("${auth0.audience}")
-    String audience;
+    @Value("${auth0.username-claim}")
+    String usernameClaim;
 
     private final PubSubService messagingService;
 
@@ -37,7 +37,7 @@ public class PubSubController {
 
     @MessageMapping("publish")
     Mono<Void> publish(String message, @AuthenticationPrincipal Mono<Jwt> token) {
-        return token.map(jwt -> jwt.getClaimAsString(audience + "/username"))
+        return token.map(jwt -> jwt.getClaimAsString(usernameClaim))
                 .flatMap(username -> messagingService.publish(new Message(username, message)));
     }
 

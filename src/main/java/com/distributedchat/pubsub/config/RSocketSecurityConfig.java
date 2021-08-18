@@ -25,9 +25,10 @@ public class RSocketSecurityConfig {
 
     @Value("${auth0.audience}")
     String audience;
-
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     String issuer;
+    @Value("${auth0.username-claim}")
+    String usernameClaim;
 
     @Bean
     public PayloadSocketAcceptorInterceptor rsocketInterceptor(RSocketSecurity rSocketSecurity) {
@@ -54,7 +55,7 @@ public class RSocketSecurityConfig {
         };
 
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
-        OAuth2TokenValidator<Jwt> compositeValidator = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
+        OAuth2TokenValidator<Jwt> compositeValidator = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator, usernameValidator);
 
         reactiveJwtDecoder.setJwtValidator(compositeValidator);
 
