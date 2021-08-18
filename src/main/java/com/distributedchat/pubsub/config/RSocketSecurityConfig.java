@@ -46,9 +46,16 @@ public class RSocketSecurityConfig {
         var reactiveJwtDecoder = (NimbusReactiveJwtDecoder) ReactiveJwtDecoders.fromOidcIssuerLocation(issuer);
 
         OAuth2TokenValidator<Jwt> audienceValidator = (jwt) -> {
-
             OAuth2Error error = new OAuth2Error("invalid_token", "The required audience is missing", null);
             if (jwt.getAudience().contains(audience)) {
+                return OAuth2TokenValidatorResult.success();
+            }
+            return OAuth2TokenValidatorResult.failure(error);
+        };
+
+        OAuth2TokenValidator<Jwt> usernameValidator = (jwt) -> {
+            OAuth2Error error = new OAuth2Error("invalid_token", "The required username is missing", null);
+            if (jwt.getClaimAsString(usernameClaim) != null) {
                 return OAuth2TokenValidatorResult.success();
             }
             return OAuth2TokenValidatorResult.failure(error);
