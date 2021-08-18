@@ -12,12 +12,12 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 
 @Service
-@Slf4j
 public class RedisPubSubService implements PubSubService {
 
-    private final ChannelTopic channelTopic = new ChannelTopic("broadcast");
     private final ReactiveRedisTemplate<String, Message> reactiveTemplate;
     private final ReactiveRedisMessageListenerContainer reactiveMsgListenerContainer;
+
+    private final ChannelTopic channelTopic = new ChannelTopic("broadcast");
 
     public RedisPubSubService(ReactiveRedisTemplate<String, Message> reactiveTemplate,
                               ReactiveRedisMessageListenerContainer reactiveMsgListenerContainer) {
