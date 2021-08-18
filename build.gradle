@@ -20,7 +20,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis:2.5.3'
     implementation 'org.springframework.security:spring-security-rsocket:5.5.1'
     implementation 'org.springframework.security:spring-security-messaging:5.5.1'
-    implementation 'org.jetbrains:annotations:21.0.1'
+    implementation 'org.jetbrains:annotations:22.0.0'
     compileOnly 'org.springframework.boot:spring-boot-configuration-processor:2.5.3'
     compileOnly 'org.projectlombok:lombok:1.18.20'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'
