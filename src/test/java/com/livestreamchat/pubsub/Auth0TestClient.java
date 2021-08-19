@@ -19,6 +19,7 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "auth0.test")
 @Setter
 @Getter
+// integration tests use this auth0 flow for retrieving a valid access token : https://auth0.com/docs/flows/resource-owner-password-flow
 public class Auth0TestClient {
 
     @Value("${auth0.audience}")
