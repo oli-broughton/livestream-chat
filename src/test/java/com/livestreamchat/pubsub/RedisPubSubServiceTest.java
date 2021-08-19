@@ -1,4 +1,4 @@
-package com.distributedchat.pubsub;
+package com.livestreamchat.pubsub;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

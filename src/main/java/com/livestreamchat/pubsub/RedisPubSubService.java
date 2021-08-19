@@ -1,6 +1,5 @@
-package com.distributedchat.pubsub;
+package com.livestreamchat.pubsub;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.ReactiveSubscription;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
