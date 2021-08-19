@@ -1,4 +1,4 @@
-package com.distributedchat.pubsub;
+package com.livestreamchat.pubsub;
 
 import lombok.Getter;
 import lombok.Setter;

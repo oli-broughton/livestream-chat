@@ -1,4 +1,4 @@
-package com.distributedchat.pubsub;
+package com.livestreamchat.pubsub;
 
 import io.rsocket.exceptions.ApplicationErrorException;
 import org.junit.jupiter.api.*;
